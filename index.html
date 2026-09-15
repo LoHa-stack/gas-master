@@ -1,183 +1,884 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>가스기사 문제은행</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAS MASTER</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f6f8;color:#202124}
-button,input,textarea,select{font:inherit}button{cursor:pointer;border:0}.app{max-width:1100px;margin:auto;padding:28px 18px 60px}
-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}h1{margin:0;font-size:27px}h2{margin:0 0 18px}.muted{color:#70757a}
-.nav{display:flex;gap:8px}.nav button{padding:10px 14px;border-radius:10px;background:white;border:1px solid #ddd}.nav button.active{background:#202124;color:white}
-.card{background:white;border:1px solid #e2e4e8;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px #00000008}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:18px;border-radius:14px;background:#f8f9fa}.stat b{display:block;font-size:25px;margin-top:5px}.green{color:#16803c}.yellow{color:#a56a00}.red{color:#c5221f}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.year{padding:18px;border:1px solid #ddd;border-radius:14px}.year h3{margin:0 0 12px}.row{display:flex;gap:8px;flex-wrap:wrap}.pill{padding:9px 12px;border-radius:10px;background:#f1f3f4}.primary{background:#202124;color:white;padding:11px 16px;border-radius:10px}.danger{background:#fde8e7;color:#b3261e;padding:8px 11px;border-radius:9px}.small{padding:8px 10px;border-radius:9px;background:#f1f3f4}
-label{display:block;font-weight:650;margin:12px 0 6px}input,textarea,select{width:100%;border:1px solid #d7d9dd;border-radius:10px;padding:11px;background:white}textarea{min-height:100px;resize:vertical}
-.question{font-size:18px;line-height:1.65;white-space:pre-wrap}.answer{background:#f8f9fa;padding:14px;border-radius:10px;margin-top:12px;white-space:pre-wrap}.status{display:flex;gap:8px;margin-top:16px}.status button{flex:1;padding:12px;border-radius:10px;background:#f1f3f4}.status .sel-green{background:#dff3e6;color:#137333;font-weight:700}.status .sel-yellow{background:#fff0c2;color:#8a5a00;font-weight:700}.status .sel-red{background:#fce1df;color:#b3261e;font-weight:700}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar>*{width:auto}.filters{display:flex;gap:10px;flex-wrap:wrap}.filters label{font-weight:500;margin:0}.filters input{width:auto}
-.empty{text-align:center;padding:40px;color:#777}.topline{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
-@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}header{align-items:flex-start;gap:12px;flex-direction:column}}
+:root{
+  --bg:#f3f5f8; --card:#ffffff; --text:#172033; --muted:#6b7280; --line:#dce1e8;
+  --nav:#111827; --blue:#2563eb; --blue2:#1d4ed8; --danger:#dc2626;
+  --green-bg:#dcfce7; --green:#166534; --yellow-bg:#fef3c7; --yellow:#92400e;
+  --red-bg:#fee2e2; --red:#991b1b; --shadow:0 8px 24px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,"Noto Sans KR","Apple SD Gothic Neo",sans-serif}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+header{background:var(--nav);color:#fff;padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:20}
+.brand{font-size:21px;font-weight:900;letter-spacing:.2px}
+.version{font-size:11px;font-weight:700;color:#aeb8c8;margin-left:7px}
+nav{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:800;transition:.15s transform,.15s opacity,.15s background}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue2)}
+.btn-secondary{background:#e8ecf2;color:#1f2937}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:#fff;color:#1f2937;border:1px solid var(--line)}
+.btn-small{padding:7px 10px;font-size:13px}
+main{max-width:1080px;margin:24px auto;padding:0 16px 70px}
+.card{background:var(--card);border:1px solid #e5e8ed;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+h1,h2,h3,p{margin-top:0}
+h2{font-size:22px;margin-bottom:6px}
+h3{font-size:18px}
+.muted{color:var(--muted);font-size:13px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+label.field-label{display:block;font-size:14px;font-weight:800;margin:12px 0 6px}
+input,select,textarea{width:100%;border:1px solid #cfd6df;border-radius:10px;padding:11px 12px;background:#fff;color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:#8cb4ff;box-shadow:0 0 0 3px rgba(37,99,235,.10)}
+textarea{min-height:120px;resize:vertical;line-height:1.55}
+.year-block{margin-top:22px}
+.type-title{font-weight:900;margin:13px 0 8px}
+.round-list{display:flex;gap:8px;flex-wrap:wrap}
+.round-btn{border:1px solid #d6dce5;background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;color:#273043}
+.round-btn:hover{border-color:#9db4da;background:#f8fbff}
+.question-block,.question-item{border:1px solid #e1e6ec;border-radius:13px;padding:15px;margin-top:12px;background:#fff}
+.question-text{font-size:19px;line-height:1.7;white-space:pre-wrap;margin:16px 0}
+.answer-box{margin-top:14px;background:#f8fafc;border-left:4px solid var(--blue);border-radius:9px;padding:14px;white-space:pre-wrap;line-height:1.6}
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.status-btn{border:1px solid #d2d7df;border-radius:999px;padding:9px 13px;background:#fff;font-weight:900}
+.status-btn.sel-unchecked{box-shadow:inset 0 0 0 2px #a6adb7}
+.status-btn.sel-memorized{background:var(--green-bg);border-color:#86efac;color:var(--green)}
+.status-btn.sel-unsure{background:var(--yellow-bg);border-color:#fcd34d;color:var(--yellow)}
+.status-btn.sel-unknown{background:var(--red-bg);border-color:#fca5a5;color:var(--red)}
+.study-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:20px}
+.notice{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px;font-size:14px;color:#1e3a8a}
+.review-statuses{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.check-pill{display:flex;align-items:center;gap:7px;border:1px solid #d6dce5;background:#fff;border-radius:999px;padding:9px 12px;font-weight:800}
+.check-pill input{width:auto;margin:0}
+.divider{border:0;border-top:1px solid #e6e9ee;margin:18px 0}
+.empty{padding:26px 0;color:var(--muted)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}
+.modal-backdrop.show{display:flex}
+.modal{width:min(420px,100%);background:#fff;border-radius:16px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.22)}
+.modal h3{margin-bottom:8px}
+.modal p{color:#4b5563;white-space:pre-wrap;line-height:1.5}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 14px;border-radius:999px;font-weight:800;font-size:13px;opacity:0;pointer-events:none;transition:.2s;z-index:120}
+.toast.show{opacity:1}
+@media(max-width:720px){
+  .grid3{grid-template-columns:1fr}
+  .card{padding:15px}
+  .study-footer{align-items:stretch}
+  .study-footer>.toolbar,.study-footer>.btn{width:100%}
+  .study-footer>.toolbar .btn{flex:1}
+}
 </style>
 </head>
 <body>
-<div class="app">
 <header>
-  <div><h1>GAS MASTER</h1><div class="muted">가스기사 개인 문제은행</div></div>
-  <div class="nav">
-    <button id="homeBtn" class="active" onclick="showHome()">홈</button>
-    <button id="addBtn" onclick="showAdd()">문제 등록</button>
-  </div>
+  <div class="brand">GAS MASTER <span class="version">v1.0 NEW</span></div>
+  <nav>
+    <button type="button" class="btn btn-primary" id="navHome">홈</button>
+    <button type="button" class="btn btn-primary" id="navAdd">문제 등록</button>
+    <button type="button" class="btn btn-primary" id="navReview">복습하기</button>
+  </nav>
 </header>
-<main id="main"></main>
+
+<main id="app"></main>
+
+<div class="modal-backdrop" id="confirmBackdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle">확인</h3>
+    <p id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" id="confirmNo">아니오</button>
+      <button type="button" class="btn btn-primary" id="confirmYes">예</button>
+    </div>
+  </div>
 </div>
+<div class="toast" id="toast"></div>
 
 <script>
-const KEY="gasMasterQuestions";
-let qs=JSON.parse(localStorage.getItem(KEY)||"[]").map(q=>({...q,examType:q.examType||"필답형"}));
-let current=[], currentIndex=0, showAns=false;
+"use strict";
 
-function save(){localStorage.setItem(KEY,JSON.stringify(qs))}
-function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function statusCount(s){return qs.filter(q=>q.status===s).length}
+/* =========================================================
+   DATA ACCESS LAYER
+   현재는 localStorage를 사용하지만 UI는 아래 함수만 호출한다.
+   향후 Supabase 전환 시 이 객체 내부 구현만 교체하면 된다.
+   ========================================================= */
+const DataStore = (() => {
+  const STORAGE_KEY = "gas_master_clean_2026_v1";
 
-function showHome(){
- document.getElementById("homeBtn").classList.add("active");document.getElementById("addBtn").classList.remove("active");
- const years=[...new Set(qs.map(q=>q.year))].sort((a,b)=>b-a);
- document.getElementById("main").innerHTML=`
- <section class="card"><div class="topline"><div><h2>학습 현황</h2><div class="muted">문제 상태를 저장하고 원하는 문제만 골라 복습하세요.</div></div></div>
- <div class="stats">
-  <div class="stat">전체<b>${qs.length}</b></div><div class="stat green">🟢 외움<b>${statusCount("외움")}</b></div>
-  <div class="stat yellow">🟡 애매<b>${statusCount("애매")}</b></div><div class="stat red">🔴 모름<b>${statusCount("모름")}</b></div>
- </div></section>
- <section class="card"><h2>복습하기</h2>
-  <div class="filters">
-   <select id="reviewYear"><option value="">전체 연도</option>${years.map(y=>`<option>${esc(y)}</option>`).join("")}</select>
-   <select id="reviewType"><option value="">전체 유형</option><option>필답형</option><option>작업형</option></select>
-   <select id="reviewRound"><option value="">전체 회차</option>${[...new Set(qs.map(q=>q.round))].sort().map(r=>`<option>${esc(r)}</option>`).join("")}</select>
-   <label><input type="checkbox" value="애매" class="st"> 🟡 애매</label><label><input type="checkbox" value="모름" class="st"> 🔴 모름</label><label><input type="checkbox" value="외움" class="st"> 🟢 외움</label>
-   <button class="primary" onclick="startReview()">복습 시작</button>
-  </div>
- </section>
- <section class="card"><h2>등록된 회차</h2>
-  <div class="muted" style="margin-bottom:14px">연도 → 필답형/작업형 → 회차 순서입니다. 회차를 누르면 문제를 풀거나 수정·삭제할 수 있습니다.</div>
-  ${years.length?`<div class="grid">${years.map(y=>`<div class="year"><h3>${esc(y)}년</h3>
-   ${["필답형","작업형"].filter(t=>qs.some(q=>q.year==y&&(q.examType||"필답형")==t)).map(t=>{
-    const rounds=[...new Set(qs.filter(q=>q.year==y&&(q.examType||"필답형")==t).map(q=>q.round))].sort();
-    return `<div style="margin-bottom:12px"><b>${t}</b><div class="row" style="margin-top:8px">${rounds.map(r=>{
-     const n=qs.filter(q=>q.year==y&&(q.examType||"필답형")==t&&q.round==r).length;
-     return `<button class="pill" onclick="openRoundManager('${esc(y)}','${esc(t)}','${esc(r)}')">${esc(r)} <span class="muted">(${n})</span></button>`;
-    }).join("")}</div></div>`;
-   }).join("")}</div></div>`).join("")}</div>`:`<div class="empty">아직 등록된 문제가 없습니다.<br>위의 <b>문제 등록</b>에서 첫 문제를 추가해보세요.</div>`}
- </section>`;
+  function readRaw(){
+    try{
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(err){
+      console.error("load failed", err);
+      return [];
+    }
+  }
+
+  function writeRaw(rows){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+  }
+
+  function clone(value){
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function normalize(row){
+    return {
+      id:String(row.id),
+      year:Number(row.year),
+      examType:row.examType === "practical" ? "practical" : "written",
+      round:Number(row.round),
+      questionNumber:String(row.questionNumber ?? ""),
+      question:String(row.question ?? ""),
+      answer:String(row.answer ?? ""),
+      status:["unchecked","memorized","unsure","unknown"].includes(row.status) ? row.status : "unchecked",
+      userAnswer:String(row.userAnswer ?? ""),
+      createdAt:row.createdAt || new Date().toISOString(),
+      updatedAt:row.updatedAt || new Date().toISOString()
+    };
+  }
+
+  async function getAllQuestions(){
+    return clone(readRaw().map(normalize));
+  }
+
+  async function getQuestionById(id){
+    const found = readRaw().map(normalize).find(q => q.id === String(id));
+    return found ? clone(found) : null;
+  }
+
+  async function addQuestions(rows){
+    const now = new Date().toISOString();
+    const data = readRaw().map(normalize);
+    const created = rows.map(row => normalize({
+      ...row,
+      id: row.id || makeId(),
+      status: row.status || "unchecked",
+      userAnswer: row.userAnswer || "",
+      createdAt: now,
+      updatedAt: now
+    }));
+    data.push(...created);
+    writeRaw(data);
+    return clone(created);
+  }
+
+  async function updateQuestion(id, patch){
+    const data = readRaw().map(normalize);
+    const index = data.findIndex(q => q.id === String(id));
+    if(index < 0) return null;
+    data[index] = normalize({...data[index], ...patch, id:data[index].id, updatedAt:new Date().toISOString()});
+    writeRaw(data);
+    return clone(data[index]);
+  }
+
+  async function removeQuestion(id){
+    const data = readRaw().map(normalize);
+    const next = data.filter(q => q.id !== String(id));
+    if(next.length === data.length) return false;
+    writeRaw(next);
+    return true;
+  }
+
+  async function removeRound(year, examType, round){
+    const data = readRaw().map(normalize);
+    const next = data.filter(q => !(q.year===Number(year) && q.examType===examType && q.round===Number(round)));
+    const removed = data.length - next.length;
+    writeRaw(next);
+    return removed;
+  }
+
+  async function updateUserAnswer(id, userAnswer){
+    return updateQuestion(id, {userAnswer:String(userAnswer ?? "")});
+  }
+
+  async function updateStatus(id, status){
+    return updateQuestion(id, {status});
+  }
+
+  async function clearUserAnswers(ids){
+    const set = new Set(ids.map(String));
+    const data = readRaw().map(normalize);
+    let changed = 0;
+    data.forEach(q => {
+      if(set.has(q.id)){
+        q.userAnswer = "";
+        q.updatedAt = new Date().toISOString();
+        changed++;
+      }
+    });
+    writeRaw(data);
+    return changed;
+  }
+
+  return {
+    getAllQuestions,
+    getQuestionById,
+    addQuestions,
+    updateQuestion,
+    removeQuestion,
+    removeRound,
+    updateUserAnswer,
+    updateStatus,
+    clearUserAnswers
+  };
+})();
+
+/* =========================================================
+   APP STATE
+   ========================================================= */
+const app = document.getElementById("app");
+let studyList = [];
+let studyIndex = 0;
+let answerVisible = false;
+let reviewMode = false;
+let studyTitle = "";
+
+document.getElementById("navHome").addEventListener("click", async () => {
+  await saveCurrentAnswerIfStudying();
+  await renderHome();
+});
+document.getElementById("navAdd").addEventListener("click", async () => {
+  await saveCurrentAnswerIfStudying();
+  await renderEditor();
+});
+document.getElementById("navReview").addEventListener("click", async () => {
+  await saveCurrentAnswerIfStudying();
+  await renderReview();
+});
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+function makeId(){
+  if(window.crypto && typeof window.crypto.randomUUID === "function") return window.crypto.randomUUID();
+  return Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,10);
 }
-function showAdd(editId=null,presetYear=null,presetType=null,presetRound=null){
- document.getElementById("homeBtn").classList.remove("active");document.getElementById("addBtn").classList.add("active");
- const q=editId?qs.find(x=>x.id===editId):null;
- document.getElementById("main").innerHTML=`<section class="card"><h2>${q?"문제 수정":"문제 등록"}</h2>
- <label>연도</label><input id="year" type="number" value="${esc(q?.year||new Date().getFullYear())}">
- <label>회차</label><select id="round"><option ${q?.round=="1회"?"selected":""}>1회</option><option ${q?.round=="2회"?"selected":""}>2회</option><option ${q?.round=="3회"?"selected":""}>3회</option></select>
- <div id="questionList"></div>
- <div class="toolbar" style="margin-top:14px">
- ${!q?'<button class="small" onclick="addQuestionBlock()">＋ 문제 추가</button>':""}
- <button class="primary" onclick="${q?`saveEditedQuestion('${q.id}')`:"saveMultipleQuestions()"}">${q?"수정 저장":"등록하기"}</button>
- <button class="small" onclick="showHome()">취소</button></div>
- </section>`;
- if(q) addQuestionBlock({num:q.num,question:q.question,answer:q.answer}, false);
- else addQuestionBlock({num:qs.length?Math.max(...qs.map(x=>Number(x.num)||0))+1:1}, false);
+function node(tag, options={}){
+  const n=document.createElement(tag);
+  if(options.className) n.className=options.className;
+  if(options.text !== undefined) n.textContent=options.text;
+  if(options.type) n.type=options.type;
+  if(options.id) n.id=options.id;
+  return n;
+}
+function addButton(parent, label, className, handler, disabled=false){
+  const b=node("button",{className:"btn "+className,text:label,type:"button"});
+  b.disabled=disabled;
+  b.addEventListener("click", handler);
+  parent.appendChild(b);
+  return b;
+}
+function addFieldLabel(parent,text){
+  parent.appendChild(node("label",{className:"field-label",text}));
+}
+function clearApp(){ app.replaceChildren(); }
+function typeLabel(code){ return code==="practical" ? "작업형" : "필답형"; }
+function statusLabel(code){
+  return {
+    unchecked:"미체크",
+    memorized:"외움",
+    unsure:"애매",
+    unknown:"모름"
+  }[code] || "미체크";
+}
+function statusIcon(code){
+  return {unchecked:"⚪",memorized:"🟢",unsure:"🟡",unknown:"🔴"}[code] || "⚪";
+}
+function toast(message){
+  const t=document.getElementById("toast");
+  t.textContent=message;
+  t.classList.add("show");
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(()=>t.classList.remove("show"),1500);
+}
+function showError(message){
+  console.error(message);
+  alert(message);
 }
 
-function addQuestionBlock(data={}, allowRemove=true){
- const list=document.getElementById("questionList");
- const index=list.children.length+1;
- const block=document.createElement("div");
- block.className="card question-block"; block.style.marginTop="16px";
- block.innerHTML=`<div class="topline"><h3 style="margin:0">문제 ${index}</h3>
- ${allowRemove?'<button class="danger" onclick="this.closest(\'.question-block\').remove();renumberBlocks()">이 문제 제거</button>':""}</div>
- <label>문제 번호</label><input class="q-num" type="number" value="${esc(data.num||index)}">
- <label>문제</label><textarea class="q-question" placeholder="문제 내용을 입력하세요.">${esc(data.question||"")}</textarea>
- <label>정답</label><textarea class="q-answer" placeholder="정답을 입력하세요.">${esc(data.answer||"")}</textarea>`;
- list.appendChild(block);
+/* =========================================================
+   CUSTOM YES/NO CONFIRM
+   ========================================================= */
+let confirmResolver=null;
+const backdrop=document.getElementById("confirmBackdrop");
+const confirmMessage=document.getElementById("confirmMessage");
+const yesBtn=document.getElementById("confirmYes");
+const noBtn=document.getElementById("confirmNo");
+
+function askConfirm(message, title="확인"){
+  if(confirmResolver) return Promise.resolve(false);
+  document.getElementById("confirmTitle").textContent=title;
+  confirmMessage.textContent=message;
+  backdrop.classList.add("show");
+  backdrop.setAttribute("aria-hidden","false");
+  return new Promise(resolve => {
+    confirmResolver=resolve;
+    yesBtn.focus();
+  });
+}
+function settleConfirm(value){
+  if(!confirmResolver) return;
+  backdrop.classList.remove("show");
+  backdrop.setAttribute("aria-hidden","true");
+  const resolve=confirmResolver;
+  confirmResolver=null;
+  resolve(value);
+}
+yesBtn.addEventListener("click",()=>settleConfirm(true));
+noBtn.addEventListener("click",()=>settleConfirm(false));
+backdrop.addEventListener("click",e=>{ if(e.target===backdrop) settleConfirm(false); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && confirmResolver) settleConfirm(false); });
+
+/* =========================================================
+   HOME
+   ========================================================= */
+async function renderHome(){
+  studyList=[];studyIndex=0;answerVisible=false;reviewMode=false;studyTitle="";
+  clearApp();
+  const questions=await DataStore.getAllQuestions();
+
+  const card=node("section",{className:"card"});
+  const top=node("div",{className:"row between"});
+  const titleWrap=node("div");
+  titleWrap.append(node("h2",{text:"문제집"}),node("div",{className:"muted",text:"연도 → 필답형/작업형 → 회차"}));
+  top.appendChild(titleWrap);
+  addButton(top,"＋ 문제 등록","btn-primary",()=>renderEditor());
+  card.appendChild(top);
+
+  if(!questions.length){
+    card.appendChild(node("div",{className:"empty",text:"등록된 문제가 없습니다. 새 문제를 등록해보세요."}));
+    app.appendChild(card);
+    return;
+  }
+
+  const tree={};
+  for(const q of questions){
+    const y=String(q.year);
+    const t=q.examType;
+    const r=String(q.round);
+    tree[y] ??= {};
+    tree[y][t] ??= {};
+    tree[y][t][r]=(tree[y][t][r]||0)+1;
+  }
+
+  Object.keys(tree).sort((a,b)=>Number(b)-Number(a)).forEach(year=>{
+    const wrap=node("div",{className:"year-block"});
+    wrap.appendChild(node("h3",{text:`${year}년`}));
+
+    ["written","practical"].forEach(type=>{
+      if(!tree[year][type]) return;
+      wrap.appendChild(node("div",{className:"type-title",text:typeLabel(type)}));
+      const rounds=node("div",{className:"round-list"});
+
+      Object.keys(tree[year][type]).sort((a,b)=>Number(a)-Number(b)).forEach(round=>{
+        const b=node("button",{className:"round-btn",text:`${round}회 (${tree[year][type][round]}문제)`,type:"button"});
+        b.addEventListener("click",()=>renderRoundManager(Number(year),type,Number(round)));
+        rounds.appendChild(b);
+      });
+      wrap.appendChild(rounds);
+    });
+    card.appendChild(wrap);
+  });
+
+  app.appendChild(card);
 }
 
-function renumberBlocks(){
- [...document.querySelectorAll(".question-block")].forEach((b,i)=>b.querySelector("h3").textContent=`문제 ${i+1}`);
+/* =========================================================
+   EDITOR / REGISTRATION
+   ========================================================= */
+async function renderEditor(editId=null, preset={}){
+  clearApp();
+  const existing=editId ? await DataStore.getQuestionById(editId) : null;
+  if(editId && !existing){
+    showError("수정할 문제를 찾지 못했습니다.");
+    await renderHome();
+    return;
+  }
+
+  const card=node("section",{className:"card"});
+  card.appendChild(node("h2",{text:existing ? "문제 수정" : "문제 등록"}));
+
+  const grid=node("div",{className:"grid3"});
+  const yearWrap=node("div");
+  addFieldLabel(yearWrap,"연도");
+  const yearInput=node("input",{id:"editorYear"});
+  yearInput.type="number";
+  yearInput.value=String(existing?.year ?? preset.year ?? new Date().getFullYear());
+  yearWrap.appendChild(yearInput);
+
+  const typeWrap=node("div");
+  addFieldLabel(typeWrap,"유형");
+  const typeSelect=node("select",{id:"editorType"});
+  [["written","필답형"],["practical","작업형"]].forEach(([value,label])=>{
+    const option=node("option",{text:label});
+    option.value=value;
+    if(value===(existing?.examType ?? preset.examType ?? "written")) option.selected=true;
+    typeSelect.appendChild(option);
+  });
+  typeWrap.appendChild(typeSelect);
+
+  const roundWrap=node("div");
+  addFieldLabel(roundWrap,"회차");
+  const roundSelect=node("select",{id:"editorRound"});
+  [1,2,3].forEach(value=>{
+    const option=node("option",{text:`${value}회`});
+    option.value=String(value);
+    if(value===Number(existing?.round ?? preset.round ?? 1)) option.selected=true;
+    roundSelect.appendChild(option);
+  });
+  roundWrap.appendChild(roundSelect);
+
+  grid.append(yearWrap,typeWrap,roundWrap);
+  card.appendChild(grid);
+
+  const blocks=node("div",{id:"editorBlocks"});
+  card.appendChild(blocks);
+
+  const footer=node("div",{className:"toolbar"});
+  if(!existing){
+    addButton(footer,"＋ 문제 추가","btn-secondary",()=>addQuestionBlock());
+  }
+  addButton(footer,existing ? "수정 저장" : "등록하기","btn-primary",async()=>{
+    if(existing) await submitEdit(existing.id);
+    else await submitNew();
+  });
+  addButton(footer,"취소","btn-ghost",async()=>{
+    if(existing) await renderRoundManager(existing.year,existing.examType,existing.round);
+    else await renderHome();
+  });
+  card.appendChild(footer);
+  app.appendChild(card);
+
+  addQuestionBlock(existing || {});
 }
 
-function collectQuestionBlocks(){
- return [...document.querySelectorAll(".question-block")].map(b=>({
-   num:b.querySelector(".q-num").value, question:b.querySelector(".q-question").value,
-   answer:b.querySelector(".q-answer").value
- }));
+function addQuestionBlock(data={}){
+  const host=document.getElementById("editorBlocks");
+  if(!host){ showError("문제 입력 영역을 찾지 못했습니다."); return; }
+
+  const block=node("section",{className:"question-block"});
+  const head=node("div",{className:"row between"});
+  head.appendChild(node("strong",{text:"문제"}));
+  addButton(head,"이 문제칸 삭제","btn-secondary btn-small",async()=>{
+    const ok=await askConfirm("이 문제 입력칸을 삭제하시겠습니까?");
+    if(ok) block.remove();
+  });
+  block.appendChild(head);
+
+  addFieldLabel(block,"문제 번호");
+  const num=node("input");
+  num.className="q-number";
+  num.value=String(data.questionNumber ?? "");
+  num.placeholder="예: 1";
+  block.appendChild(num);
+
+  addFieldLabel(block,"문제");
+  const q=node("textarea");
+  q.className="q-question";
+  q.value=String(data.question ?? "");
+  q.placeholder="문제를 입력하세요.";
+  block.appendChild(q);
+
+  addFieldLabel(block,"정답");
+  const a=node("textarea");
+  a.className="q-answer";
+  a.value=String(data.answer ?? "");
+  a.placeholder="정답을 입력하세요.";
+  block.appendChild(a);
+
+  host.appendChild(block);
 }
 
-function saveMultipleQuestions(){
- const year=document.getElementById("year").value, round=document.getElementById("round").value;
- const blocks=collectQuestionBlocks();
- if(blocks.some(x=>!x.question.trim()||!x.answer.trim())){alert("모든 문제의 문제 내용과 정답을 입력해주세요.");return}
- blocks.forEach(data=>qs.push({id:crypto.randomUUID(),year,examType:document.getElementById("examType").value,round,...data,status:"",userAnswer:""}));
- save();showHome();
+function collectEditorRows(){
+  return [...document.querySelectorAll(".question-block")].map((block,index)=>({
+    questionNumber:block.querySelector(".q-number").value.trim() || String(index+1),
+    question:block.querySelector(".q-question").value.trim(),
+    answer:block.querySelector(".q-answer").value.trim()
+  })).filter(row=>row.question || row.answer);
 }
 
-function saveEditedQuestion(id){
- const q=qs.find(x=>x.id===id), data=collectQuestionBlocks()[0];
- if(!q)return;
- if(!data.question.trim()||!data.answer.trim()){alert("문제와 정답을 입력해주세요.");return}
- Object.assign(q,{year:document.getElementById("year").value,examType:document.getElementById("examType").value,round:document.getElementById("round").value,...data});
- save();showHome();
+async function submitNew(){
+  const year=Number(document.getElementById("editorYear").value);
+  const examType=document.getElementById("editorType").value;
+  const round=Number(document.getElementById("editorRound").value);
+  const rows=collectEditorRows();
+
+  if(!year){ alert("연도를 입력해주세요."); return; }
+  if(!rows.length){ alert("문제를 1개 이상 입력해주세요."); return; }
+
+  const ok=await askConfirm("문제를 등록하시겠습니까?");
+  if(!ok) return;
+
+  await DataStore.addQuestions(rows.map(row=>({
+    year,examType,round,
+    questionNumber:row.questionNumber,
+    question:row.question,
+    answer:row.answer,
+    status:"unchecked",
+    userAnswer:""
+  })));
+  toast(`${rows.length}개 문제를 등록했습니다.`);
+  await renderRoundManager(year,examType,round);
 }
 
-function saveQuestion(id){
- const data={year:document.getElementById("year").value,round:document.getElementById("round").value,num:document.getElementById("num").value,question:document.getElementById("question").value,answer:document.getElementById("answer").value};
- if(!data.question.trim()||!data.answer.trim()){alert("문제와 정답을 입력해주세요.");return}
- if(id){let q=qs.find(x=>x.id===id);Object.assign(q,data)}else qs.push({id:crypto.randomUUID(),...data,status:"",userAnswer:""});
- save();showHome();
+async function submitEdit(id){
+  const current=await DataStore.getQuestionById(id);
+  if(!current){ showError("수정할 문제를 찾지 못했습니다."); return; }
+
+  const rows=collectEditorRows();
+  if(!rows.length){ alert("문제 내용을 입력해주세요."); return; }
+
+  const ok=await askConfirm("수정하시겠습니까?");
+  if(!ok) return;
+
+  const updated=await DataStore.updateQuestion(id,{
+    year:Number(document.getElementById("editorYear").value),
+    examType:document.getElementById("editorType").value,
+    round:Number(document.getElementById("editorRound").value),
+    questionNumber:rows[0].questionNumber,
+    question:rows[0].question,
+    answer:rows[0].answer
+  });
+  if(!updated){ showError("수정할 문제를 찾지 못했습니다."); return; }
+  toast("수정했습니다.");
+  await renderRoundManager(updated.year,updated.examType,updated.round);
 }
-function openRoundManager(year,type,round){
- const list=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).sort((a,b)=>Number(a.num)-Number(b.num));
- document.getElementById("homeBtn").classList.remove("active");document.getElementById("addBtn").classList.remove("active");
- document.getElementById("main").innerHTML=`
- <section class="card"><div class="topline"><div><div class="muted">${esc(year)}년 · ${esc(type)} · ${esc(round)}</div><h2>등록된 문제</h2></div><button class="small" onclick="showHome()">← 홈</button></div>
- <div class="toolbar" style="margin-bottom:14px"><button class="primary" onclick="openRound('${esc(year)}','${esc(type)}','${esc(round)}')">문제 풀기</button>
- <button class="small" onclick="showAdd(null,'${esc(year)}','${esc(type)}','${esc(round)}')">＋ 문제 추가</button>
- <button class="danger" onclick="deleteRound('${esc(year)}','${esc(type)}','${esc(round)}')">이 회차 전체 삭제</button></div>
- ${list.map(q=>`<div class="card" style="margin:10px 0"><div class="topline"><b>문제 ${esc(q.num)}번</b><div class="toolbar">
- <button class="small" onclick="showAdd('${q.id}')">수정</button><button class="danger" onclick="deleteQuestionFromRound('${q.id}','${esc(year)}','${esc(type)}','${esc(round)}')">삭제</button></div></div>
- <div class="question">${esc(q.question)}</div></div>`).join("")}</section>`;
+
+/* =========================================================
+   ROUND MANAGER
+   ========================================================= */
+async function renderRoundManager(year,examType,round){
+  clearApp();
+  const all=await DataStore.getAllQuestions();
+  const list=all.filter(q=>q.year===Number(year)&&q.examType===examType&&q.round===Number(round))
+    .sort((a,b)=>Number(a.questionNumber)-Number(b.questionNumber));
+
+  const card=node("section",{className:"card"});
+  const top=node("div",{className:"row between"});
+  const info=node("div");
+  info.append(node("h2",{text:`${year}년 ${typeLabel(examType)} ${round}회`}),node("div",{className:"muted",text:`${list.length}문제`}));
+  top.appendChild(info);
+
+  const controls=node("div",{className:"toolbar"});
+  addButton(controls,"문제 풀기","btn-primary",async()=>{
+    if(!list.length){ alert("문제가 없습니다."); return; }
+    const ok=await askConfirm("학습을 시작하시겠습니까?");
+    if(ok) await openStudy(year,examType,round);
+  });
+  addButton(controls,"＋ 문제 추가","btn-secondary",()=>renderEditor(null,{year,examType,round}));
+  addButton(controls,"이 회차 전체 삭제","btn-danger",async()=>{
+    const ok=await askConfirm("이 회차의 문제를 모두 삭제하시겠습니까?");
+    if(!ok) return;
+    const removed=await DataStore.removeRound(year,examType,round);
+    if(!removed){ alert("삭제할 문제가 없습니다."); return; }
+    toast("회차를 삭제했습니다.");
+    await renderHome();
+  });
+  top.appendChild(controls);
+  card.appendChild(top);
+  card.appendChild(node("hr",{className:"divider"}));
+
+  if(!list.length){
+    card.appendChild(node("div",{className:"empty",text:"등록된 문제가 없습니다."}));
+  }
+
+  list.forEach(q=>{
+    const item=node("section",{className:"question-item"});
+    const head=node("div",{className:"row between"});
+    const left=node("div");
+    left.append(node("strong",{text:`${q.questionNumber}번`}),node("div",{className:"muted",text:`${statusIcon(q.status)} ${statusLabel(q.status)}`}));
+    head.appendChild(left);
+
+    const actions=node("div",{className:"toolbar"});
+    addButton(actions,"수정","btn-secondary btn-small",()=>renderEditor(q.id));
+    addButton(actions,"삭제","btn-danger btn-small",async()=>{
+      const ok=await askConfirm("정말로 삭제하시겠습니까?");
+      if(!ok) return;
+      const removed=await DataStore.removeQuestion(q.id);
+      if(!removed){ alert("삭제할 문제를 찾지 못했습니다."); return; }
+      toast("삭제했습니다.");
+      await renderRoundManager(year,examType,round);
+    });
+    head.appendChild(actions);
+    item.appendChild(head);
+
+    const text=node("div",{text:q.question});
+    text.style.whiteSpace="pre-wrap";
+    text.style.marginTop="10px";
+    item.appendChild(text);
+    card.appendChild(item);
+  });
+
+  const footer=node("div",{className:"toolbar"});
+  addButton(footer,"홈으로","btn-ghost",renderHome);
+  card.appendChild(footer);
+  app.appendChild(card);
 }
-function deleteQuestionFromRound(id,year,type,round){
- if(confirm("이 문제를 삭제할까요?")){qs=qs.filter(q=>q.id!==id);save();
-  if(qs.some(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round))openRoundManager(year,type,round);else showHome();}
+
+/* =========================================================
+   REVIEW
+   ========================================================= */
+async function renderReview(){
+  clearApp();
+  const questions=await DataStore.getAllQuestions();
+  const years=[...new Set(questions.map(q=>q.year))].sort((a,b)=>b-a);
+
+  const card=node("section",{className:"card"});
+  card.appendChild(node("h2",{text:"복습하기"}));
+  card.appendChild(node("div",{className:"muted",text:"기본값은 미체크/외움/애매/모름 전체 선택입니다."}));
+
+  const grid=node("div",{className:"grid3"});
+  const yearWrap=node("div");
+  addFieldLabel(yearWrap,"연도");
+  const yearSelect=node("select",{id:"reviewYear"});
+  yearSelect.appendChild(new Option("전체",""));
+  years.forEach(y=>yearSelect.appendChild(new Option(String(y),String(y))));
+  yearWrap.appendChild(yearSelect);
+
+  const typeWrap=node("div");
+  addFieldLabel(typeWrap,"유형");
+  const typeSelect=node("select",{id:"reviewType"});
+  typeSelect.append(new Option("전체",""),new Option("필답형","written"),new Option("작업형","practical"));
+  typeWrap.appendChild(typeSelect);
+
+  const roundWrap=node("div");
+  addFieldLabel(roundWrap,"회차");
+  const roundSelect=node("select",{id:"reviewRound"});
+  roundSelect.append(new Option("전체",""),new Option("1회","1"),new Option("2회","2"),new Option("3회","3"));
+  roundWrap.appendChild(roundSelect);
+
+  grid.append(yearWrap,typeWrap,roundWrap);
+  card.appendChild(grid);
+
+  addFieldLabel(card,"상태");
+  const statuses=node("div",{className:"review-statuses"});
+  [
+    ["unchecked","⚪ 미체크"],
+    ["memorized","🟢 외움"],
+    ["unsure","🟡 애매"],
+    ["unknown","🔴 모름"]
+  ].forEach(([value,label])=>{
+    const pill=node("label",{className:"check-pill"});
+    const cb=node("input");
+    cb.type="checkbox";
+    cb.className="review-status";
+    cb.value=value;
+    cb.checked=true;
+    pill.append(cb,document.createTextNode(label));
+    statuses.appendChild(pill);
+  });
+  card.appendChild(statuses);
+
+  const footer=node("div",{className:"toolbar"});
+  addButton(footer,"복습 시작","btn-primary",startReview);
+  addButton(footer,"취소","btn-ghost",renderHome);
+  card.appendChild(footer);
+  app.appendChild(card);
 }
-function deleteRound(year,type,round){
- const count=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).length;
- if(confirm(`${year}년 ${type} ${round}의 문제 ${count}개를 모두 삭제할까요?\n삭제 후에는 되돌릴 수 없습니다.`)){
-  qs=qs.filter(q=>!(q.year==year&&(q.examType||"필답형")==type&&q.round==round));save();showHome();}
+
+async function startReview(){
+  const checked=[...document.querySelectorAll(".review-status:checked")];
+  if(!checked.length){
+    alert("복습할 문제 상태를 하나 이상 선택해주세요.");
+    return;
+  }
+
+  const yearValue=document.getElementById("reviewYear").value;
+  const typeValue=document.getElementById("reviewType").value;
+  const roundValue=document.getElementById("reviewRound").value;
+  const selectedStatuses=new Set(checked.map(cb=>cb.value));
+
+  const all=await DataStore.getAllQuestions();
+  const matched=all.filter(q=>
+    (!yearValue || q.year===Number(yearValue)) &&
+    (!typeValue || q.examType===typeValue) &&
+    (!roundValue || q.round===Number(roundValue)) &&
+    selectedStatuses.has(q.status)
+  );
+
+  if(!matched.length){
+    alert("조건에 맞는 문제가 없습니다.");
+    return;
+  }
+
+  const ok=await askConfirm("복습을 시작하시겠습니까?");
+  if(!ok) return;
+
+  studyList=shuffle(matched);
+  studyIndex=0;
+  answerVisible=false;
+  reviewMode=true;
+  studyTitle="복습 문제";
+  await renderStudy();
 }
-function openRound(year,type,round){current=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).sort((a,b)=>Number(a.num)-Number(b.num));currentIndex=0;showAns=false;renderQuiz(`${year}년 ${type} ${round}`)}
-function startReview(){
- const y=document.getElementById("reviewYear").value,t=document.getElementById("reviewType").value,r=document.getElementById("reviewRound").value;
- const sts=[...document.querySelectorAll(".st:checked")].map(x=>x.value);
- current=qs.filter(q=>(!y||q.year==y)&&(!t||(q.examType||"필답형")==t)&&(!r||q.round==r)&&(!sts.length||sts.includes(q.status))).sort(()=>Math.random()-.5);
- if(!current.length){alert("조건에 맞는 문제가 없습니다.");return} currentIndex=0;showAns=false;renderQuiz("복습 문제")
+function shuffle(array){
+  const copy=[...array];
+  for(let i=copy.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [copy[i],copy[j]]=[copy[j],copy[i]];
+  }
+  return copy;
 }
-function renderQuiz(title){
- const q=current[currentIndex];
- document.getElementById("main").innerHTML=`<section class="card"><div class="topline"><div><div class="muted">${esc(title)} · ${currentIndex+1} / ${current.length}</div><h2>문제 ${esc(q.num)}번</h2></div><button class="small" onclick="showHome()">← 홈</button></div>
- <div class="question">${esc(q.question)}</div>
- <label>내 답</label><textarea id="myAnswer" placeholder="답을 직접 입력해보세요.">${esc(q.userAnswer||"")}</textarea>
- <button class="primary" style="margin-top:8px" onclick="reveal()">정답 보기</button>
- <div id="answerArea">${showAns?answerHTML(q):""}</div>
- </section>`;
+
+/* =========================================================
+   STUDY
+   ========================================================= */
+async function openStudy(year,examType,round){
+  const all=await DataStore.getAllQuestions();
+  studyList=all.filter(q=>q.year===Number(year)&&q.examType===examType&&q.round===Number(round))
+    .sort((a,b)=>Number(a.questionNumber)-Number(b.questionNumber));
+
+  if(!studyList.length){ alert("문제가 없습니다."); return; }
+
+  studyIndex=0;
+  answerVisible=false;
+  reviewMode=false;
+  studyTitle=`${year}년 ${typeLabel(examType)} ${round}회`;
+  await renderStudy();
 }
-function answerHTML(q){return `<div class="answer"><b>정답</b><br>${esc(q.answer)}</div>
- <div class="status"><button class="${q.status==="외움"?"sel-green":""}" onclick="setStatus('외움')">🟢 외움</button><button class="${q.status==="애매"?"sel-yellow":""}" onclick="setStatus('애매')">🟡 애매</button><button class="${q.status==="모름"?"sel-red":""}" onclick="setStatus('모름')">🔴 모름</button></div>
- <div class="toolbar" style="margin-top:12px"><button class="small" onclick="prevQ()">← 이전</button><button class="small" onclick="nextQ()">다음 →</button><button class="danger" onclick="deleteQuestion('${q.id}')">문제 삭제</button><button class="small" onclick="showAdd('${q.id}')">수정</button></div>`}
-function reveal(){const q=current[currentIndex];q.userAnswer=document.getElementById("myAnswer").value;save();showAns=true;renderQuiz(current.length?current[0].year+"년 "+current[0].round:"복습 문제")}
-function setStatus(s){const q=current[currentIndex];q.status=s;q.userAnswer=document.getElementById("myAnswer")?.value||q.userAnswer;save();showAns=true;renderQuiz("복습 문제")}
-function prevQ(){if(currentIndex>0){currentIndex--;showAns=false;renderQuiz("문제집")}}
-function nextQ(){if(currentIndex<current.length-1){currentIndex++;showAns=false;renderQuiz("문제집")}else alert("마지막 문제입니다!")}
-function deleteQuestion(id){if(confirm("이 문제를 삭제할까요?")){qs=qs.filter(q=>q.id!==id);save();showHome()}}
-showHome();
+
+async function renderStudy(){
+  clearApp();
+  const q=studyList[studyIndex];
+  if(!q){ await renderHome(); return; }
+
+  const card=node("section",{className:"card"});
+  const top=node("div",{className:"row between"});
+  const left=node("div");
+  left.append(node("h2",{text:studyTitle}),node("div",{className:"muted",text:`${studyIndex+1} / ${studyList.length} · ${q.questionNumber}번`}));
+  top.append(left,node("div",{className:"muted",text:`${statusIcon(q.status)} ${statusLabel(q.status)}`}));
+  card.appendChild(top);
+
+  card.appendChild(node("div",{className:"question-text",text:q.question}));
+
+  if(reviewMode && studyIndex===0){
+    const bar=node("div",{className:"toolbar"});
+    addButton(bar,"기존 답안 삭제","btn-danger",async()=>{
+      const ok=await askConfirm("기존 답안을 삭제하시겠습니까?");
+      if(!ok) return;
+      const ids=studyList.map(item=>item.id);
+      await DataStore.clearUserAnswers(ids);
+      studyList=studyList.map(item=>({...item,userAnswer:""}));
+      const ta=document.getElementById("studyAnswer");
+      if(ta) ta.value="";
+      toast("기존 답안을 삭제했습니다.");
+      answerVisible=false;
+      await renderStudy();
+    });
+    bar.appendChild(node("span",{className:"muted",text:"현재 복습 대상으로 선택된 문제들의 내 답만 삭제됩니다."}));
+    card.appendChild(bar);
+  }
+
+  addFieldLabel(card,"내 답");
+  const textarea=node("textarea",{id:"studyAnswer"});
+  textarea.placeholder="답을 직접 입력해보세요.";
+  textarea.value=q.userAnswer || "";
+  card.appendChild(textarea);
+
+  const answerBar=node("div",{className:"toolbar"});
+  addButton(answerBar,"정답 보기","btn-primary",async()=>{
+    await saveCurrentAnswer();
+    answerVisible=true;
+    await renderStudy();
+  });
+  card.appendChild(answerBar);
+
+  if(answerVisible){
+    const answer=node("div",{className:"answer-box"});
+    answer.append(node("strong",{text:"정답"}),document.createElement("br"),document.createTextNode(q.answer));
+    card.appendChild(answer);
+
+    const statusRow=node("div",{className:"status-row"});
+    [
+      ["unchecked","⚪ 미체크","sel-unchecked"],
+      ["memorized","🟢 외움","sel-memorized"],
+      ["unsure","🟡 애매","sel-unsure"],
+      ["unknown","🔴 모름","sel-unknown"]
+    ].forEach(([value,label,selectedClass])=>{
+      const b=node("button",{className:"status-btn"+(q.status===value ? " "+selectedClass : ""),text:label,type:"button"});
+      b.addEventListener("click",async()=>{
+        await saveCurrentAnswer();
+        const updated=await DataStore.updateStatus(q.id,value);
+        if(!updated){ showError("상태를 저장하지 못했습니다."); return; }
+        q.status=value;
+        answerVisible=true;
+        await renderStudy();
+      });
+      statusRow.appendChild(b);
+    });
+    card.appendChild(statusRow);
+  }
+
+  const footer=node("div",{className:"study-footer"});
+  const nav=node("div",{className:"toolbar"});
+  addButton(nav,"이전","btn-secondary",async()=>{
+    await saveCurrentAnswer();
+    if(studyIndex>0){
+      studyIndex--;
+      answerVisible=false;
+      await renderStudy();
+    }
+  },studyIndex===0);
+
+  addButton(nav,"다음","btn-secondary",async()=>{
+    await saveCurrentAnswer();
+    if(studyIndex<studyList.length-1){
+      studyIndex++;
+      answerVisible=false;
+      await renderStudy();
+    }else{
+      alert("마지막 문제입니다.");
+    }
+  });
+  footer.appendChild(nav);
+
+  addButton(footer,"학습 종료","btn-danger",async()=>{
+    await saveCurrentAnswer();
+    const ok=await askConfirm("학습을 종료하시겠습니까?");
+    if(ok) await renderHome();
+  });
+
+  card.appendChild(footer);
+  app.appendChild(card);
+}
+
+async function saveCurrentAnswer(){
+  const q=studyList[studyIndex];
+  const textarea=document.getElementById("studyAnswer");
+  if(!q || !textarea) return;
+
+  const value=textarea.value;
+  const updated=await DataStore.updateUserAnswer(q.id,value);
+  if(!updated){ showError("답안을 저장하지 못했습니다."); return; }
+
+  q.userAnswer=value;
+}
+
+async function saveCurrentAnswerIfStudying(){
+  if(studyList.length && document.getElementById("studyAnswer")){
+    await saveCurrentAnswer();
+  }
+}
+
+/* =========================================================
+   INITIAL RENDER
+   ========================================================= */
+renderHome().catch(err=>{
+  console.error(err);
+  app.textContent="사이트를 불러오는 중 오류가 발생했습니다.";
+});
 </script>
 </body>
 </html>
