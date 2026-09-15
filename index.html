@@ -33,7 +33,7 @@ label{display:block;font-weight:650;margin:12px 0 6px}input,textarea,select{widt
 
 <script>
 const KEY="gasMasterQuestions";
-let qs=JSON.parse(localStorage.getItem(KEY)||"[]");
+let qs=JSON.parse(localStorage.getItem(KEY)||"[]").map(q=>({...q,examType:q.examType||"필답형"}));
 let current=[], currentIndex=0, showAns=false;
 
 function save(){localStorage.setItem(KEY,JSON.stringify(qs))}
@@ -46,26 +46,31 @@ function showHome(){
  document.getElementById("main").innerHTML=`
  <section class="card"><div class="topline"><div><h2>학습 현황</h2><div class="muted">문제 상태를 저장하고 원하는 문제만 골라 복습하세요.</div></div></div>
  <div class="stats">
-  <div class="stat">전체<b>${qs.length}</b></div>
-  <div class="stat green">🟢 외움<b>${statusCount("외움")}</b></div>
-  <div class="stat yellow">🟡 애매<b>${statusCount("애매")}</b></div>
-  <div class="stat red">🔴 모름<b>${statusCount("모름")}</b></div>
+  <div class="stat">전체<b>${qs.length}</b></div><div class="stat green">🟢 외움<b>${statusCount("외움")}</b></div>
+  <div class="stat yellow">🟡 애매<b>${statusCount("애매")}</b></div><div class="stat red">🔴 모름<b>${statusCount("모름")}</b></div>
  </div></section>
  <section class="card"><h2>복습하기</h2>
   <div class="filters">
    <select id="reviewYear"><option value="">전체 연도</option>${years.map(y=>`<option>${esc(y)}</option>`).join("")}</select>
+   <select id="reviewType"><option value="">전체 유형</option><option>필답형</option><option>작업형</option></select>
    <select id="reviewRound"><option value="">전체 회차</option>${[...new Set(qs.map(q=>q.round))].sort().map(r=>`<option>${esc(r)}</option>`).join("")}</select>
-   <label><input type="checkbox" value="애매" class="st"> 🟡 애매</label>
-   <label><input type="checkbox" value="모름" class="st"> 🔴 모름</label>
-   <label><input type="checkbox" value="외움" class="st"> 🟢 외움</label>
+   <label><input type="checkbox" value="애매" class="st"> 🟡 애매</label><label><input type="checkbox" value="모름" class="st"> 🔴 모름</label><label><input type="checkbox" value="외움" class="st"> 🟢 외움</label>
    <button class="primary" onclick="startReview()">복습 시작</button>
   </div>
  </section>
  <section class="card"><h2>등록된 회차</h2>
-  ${years.length?`<div class="grid">${years.map(y=>`<div class="year"><h3>${esc(y)}년</h3><div class="row">${[...new Set(qs.filter(q=>q.year==y).map(q=>q.round))].sort().map(r=>{let n=qs.filter(q=>q.year==y&&q.round==r).length;return `<button class="pill" onclick="openRound('${esc(y)}','${esc(r)}')">${esc(r)} <span class="muted">(${n})</span></button>`}).join("")}</div></div>`).join("")}</div>`:`<div class="empty">아직 등록된 문제가 없습니다.<br>위의 <b>문제 등록</b>에서 첫 문제를 추가해보세요.</div>`}
+  <div class="muted" style="margin-bottom:14px">연도 → 필답형/작업형 → 회차 순서입니다. 회차를 누르면 문제를 풀거나 수정·삭제할 수 있습니다.</div>
+  ${years.length?`<div class="grid">${years.map(y=>`<div class="year"><h3>${esc(y)}년</h3>
+   ${["필답형","작업형"].filter(t=>qs.some(q=>q.year==y&&(q.examType||"필답형")==t)).map(t=>{
+    const rounds=[...new Set(qs.filter(q=>q.year==y&&(q.examType||"필답형")==t).map(q=>q.round))].sort();
+    return `<div style="margin-bottom:12px"><b>${t}</b><div class="row" style="margin-top:8px">${rounds.map(r=>{
+     const n=qs.filter(q=>q.year==y&&(q.examType||"필답형")==t&&q.round==r).length;
+     return `<button class="pill" onclick="openRoundManager('${esc(y)}','${esc(t)}','${esc(r)}')">${esc(r)} <span class="muted">(${n})</span></button>`;
+    }).join("")}</div></div>`;
+   }).join("")}</div></div>`).join("")}</div>`:`<div class="empty">아직 등록된 문제가 없습니다.<br>위의 <b>문제 등록</b>에서 첫 문제를 추가해보세요.</div>`}
  </section>`;
 }
-function showAdd(editId=null){
+function showAdd(editId=null,presetYear=null,presetType=null,presetRound=null){
  document.getElementById("homeBtn").classList.remove("active");document.getElementById("addBtn").classList.add("active");
  const q=editId?qs.find(x=>x.id===editId):null;
  document.getElementById("main").innerHTML=`<section class="card"><h2>${q?"문제 수정":"문제 등록"}</h2>
@@ -77,7 +82,7 @@ function showAdd(editId=null){
  <button class="primary" onclick="${q?`saveEditedQuestion('${q.id}')`:"saveMultipleQuestions()"}">${q?"수정 저장":"등록하기"}</button>
  <button class="small" onclick="showHome()">취소</button></div>
  </section>`;
- if(q) addQuestionBlock({num:q.num,question:q.question,answer:q.answer,memo:q.memo}, false);
+ if(q) addQuestionBlock({num:q.num,question:q.question,answer:q.answer}, false);
  else addQuestionBlock({num:qs.length?Math.max(...qs.map(x=>Number(x.num)||0))+1:1}, false);
 }
 
@@ -90,8 +95,7 @@ function addQuestionBlock(data={}, allowRemove=true){
  ${allowRemove?'<button class="danger" onclick="this.closest(\'.question-block\').remove();renumberBlocks()">이 문제 제거</button>':""}</div>
  <label>문제 번호</label><input class="q-num" type="number" value="${esc(data.num||index)}">
  <label>문제</label><textarea class="q-question" placeholder="문제 내용을 입력하세요.">${esc(data.question||"")}</textarea>
- <label>정답</label><textarea class="q-answer" placeholder="정답을 입력하세요.">${esc(data.answer||"")}</textarea>
- <label>해설 / 메모 <span class="muted">(선택)</span></label><textarea class="q-memo" placeholder="해설이나 암기 메모">${esc(data.memo||"")}</textarea>`;
+ <label>정답</label><textarea class="q-answer" placeholder="정답을 입력하세요.">${esc(data.answer||"")}</textarea>`;
  list.appendChild(block);
 }
 
@@ -102,7 +106,7 @@ function renumberBlocks(){
 function collectQuestionBlocks(){
  return [...document.querySelectorAll(".question-block")].map(b=>({
    num:b.querySelector(".q-num").value, question:b.querySelector(".q-question").value,
-   answer:b.querySelector(".q-answer").value, memo:b.querySelector(".q-memo").value
+   answer:b.querySelector(".q-answer").value
  }));
 }
 
@@ -110,7 +114,7 @@ function saveMultipleQuestions(){
  const year=document.getElementById("year").value, round=document.getElementById("round").value;
  const blocks=collectQuestionBlocks();
  if(blocks.some(x=>!x.question.trim()||!x.answer.trim())){alert("모든 문제의 문제 내용과 정답을 입력해주세요.");return}
- blocks.forEach(data=>qs.push({id:crypto.randomUUID(),year,round,...data,status:"",userAnswer:""}));
+ blocks.forEach(data=>qs.push({id:crypto.randomUUID(),year,examType:document.getElementById("examType").value,round,...data,status:"",userAnswer:""}));
  save();showHome();
 }
 
@@ -118,21 +122,42 @@ function saveEditedQuestion(id){
  const q=qs.find(x=>x.id===id), data=collectQuestionBlocks()[0];
  if(!q)return;
  if(!data.question.trim()||!data.answer.trim()){alert("문제와 정답을 입력해주세요.");return}
- Object.assign(q,{year:document.getElementById("year").value,round:document.getElementById("round").value,...data});
+ Object.assign(q,{year:document.getElementById("year").value,examType:document.getElementById("examType").value,round:document.getElementById("round").value,...data});
  save();showHome();
 }
 
 function saveQuestion(id){
- const data={year:document.getElementById("year").value,round:document.getElementById("round").value,num:document.getElementById("num").value,question:document.getElementById("question").value,answer:document.getElementById("answer").value,memo:document.getElementById("memo").value};
+ const data={year:document.getElementById("year").value,round:document.getElementById("round").value,num:document.getElementById("num").value,question:document.getElementById("question").value,answer:document.getElementById("answer").value};
  if(!data.question.trim()||!data.answer.trim()){alert("문제와 정답을 입력해주세요.");return}
  if(id){let q=qs.find(x=>x.id===id);Object.assign(q,data)}else qs.push({id:crypto.randomUUID(),...data,status:"",userAnswer:""});
  save();showHome();
 }
-function openRound(year,round){current=qs.filter(q=>q.year==year&&q.round==round).sort((a,b)=>Number(a.num)-Number(b.num));currentIndex=0;showAns=false;renderQuiz(`${year}년 ${round}`)}
+function openRoundManager(year,type,round){
+ const list=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).sort((a,b)=>Number(a.num)-Number(b.num));
+ document.getElementById("homeBtn").classList.remove("active");document.getElementById("addBtn").classList.remove("active");
+ document.getElementById("main").innerHTML=`
+ <section class="card"><div class="topline"><div><div class="muted">${esc(year)}년 · ${esc(type)} · ${esc(round)}</div><h2>등록된 문제</h2></div><button class="small" onclick="showHome()">← 홈</button></div>
+ <div class="toolbar" style="margin-bottom:14px"><button class="primary" onclick="openRound('${esc(year)}','${esc(type)}','${esc(round)}')">문제 풀기</button>
+ <button class="small" onclick="showAdd(null,'${esc(year)}','${esc(type)}','${esc(round)}')">＋ 문제 추가</button>
+ <button class="danger" onclick="deleteRound('${esc(year)}','${esc(type)}','${esc(round)}')">이 회차 전체 삭제</button></div>
+ ${list.map(q=>`<div class="card" style="margin:10px 0"><div class="topline"><b>문제 ${esc(q.num)}번</b><div class="toolbar">
+ <button class="small" onclick="showAdd('${q.id}')">수정</button><button class="danger" onclick="deleteQuestionFromRound('${q.id}','${esc(year)}','${esc(type)}','${esc(round)}')">삭제</button></div></div>
+ <div class="question">${esc(q.question)}</div></div>`).join("")}</section>`;
+}
+function deleteQuestionFromRound(id,year,type,round){
+ if(confirm("이 문제를 삭제할까요?")){qs=qs.filter(q=>q.id!==id);save();
+  if(qs.some(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round))openRoundManager(year,type,round);else showHome();}
+}
+function deleteRound(year,type,round){
+ const count=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).length;
+ if(confirm(`${year}년 ${type} ${round}의 문제 ${count}개를 모두 삭제할까요?\n삭제 후에는 되돌릴 수 없습니다.`)){
+  qs=qs.filter(q=>!(q.year==year&&(q.examType||"필답형")==type&&q.round==round));save();showHome();}
+}
+function openRound(year,type,round){current=qs.filter(q=>q.year==year&&(q.examType||"필답형")==type&&q.round==round).sort((a,b)=>Number(a.num)-Number(b.num));currentIndex=0;showAns=false;renderQuiz(`${year}년 ${type} ${round}`)}
 function startReview(){
- const y=document.getElementById("reviewYear").value,r=document.getElementById("reviewRound").value;
+ const y=document.getElementById("reviewYear").value,t=document.getElementById("reviewType").value,r=document.getElementById("reviewRound").value;
  const sts=[...document.querySelectorAll(".st:checked")].map(x=>x.value);
- current=qs.filter(q=>(!y||q.year==y)&&(!r||q.round==r)&&(!sts.length||sts.includes(q.status))).sort(()=>Math.random()-.5);
+ current=qs.filter(q=>(!y||q.year==y)&&(!t||(q.examType||"필답형")==t)&&(!r||q.round==r)&&(!sts.length||sts.includes(q.status))).sort(()=>Math.random()-.5);
  if(!current.length){alert("조건에 맞는 문제가 없습니다.");return} currentIndex=0;showAns=false;renderQuiz("복습 문제")
 }
 function renderQuiz(title){
@@ -144,7 +169,7 @@ function renderQuiz(title){
  <div id="answerArea">${showAns?answerHTML(q):""}</div>
  </section>`;
 }
-function answerHTML(q){return `<div class="answer"><b>정답</b><br>${esc(q.answer)}${q.memo?`<br><br><b>해설/메모</b><br>${esc(q.memo)}`:""}</div>
+function answerHTML(q){return `<div class="answer"><b>정답</b><br>${esc(q.answer)}</div>
  <div class="status"><button class="${q.status==="외움"?"sel-green":""}" onclick="setStatus('외움')">🟢 외움</button><button class="${q.status==="애매"?"sel-yellow":""}" onclick="setStatus('애매')">🟡 애매</button><button class="${q.status==="모름"?"sel-red":""}" onclick="setStatus('모름')">🔴 모름</button></div>
  <div class="toolbar" style="margin-top:12px"><button class="small" onclick="prevQ()">← 이전</button><button class="small" onclick="nextQ()">다음 →</button><button class="danger" onclick="deleteQuestion('${q.id}')">문제 삭제</button><button class="small" onclick="showAdd('${q.id}')">수정</button></div>`}
 function reveal(){const q=current[currentIndex];q.userAnswer=document.getElementById("myAnswer").value;save();showAns=true;renderQuiz(current.length?current[0].year+"년 "+current[0].round:"복습 문제")}
