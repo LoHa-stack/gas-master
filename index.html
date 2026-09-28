@@ -158,6 +158,7 @@ const DataStore = (() => {
       questionNumber:String(row.question_number ?? ""),
       question:String(row.question ?? ""),
       answer:String(row.answer ?? ""),
+      imageUrl:String(row.image_url ?? ""),
       status:["unchecked","memorized","unsure","unknown"].includes(row.status) ? row.status : "unchecked",
       userAnswer:String(row.user_answer ?? ""),
       createdAt:row.created_at ?? "",
@@ -173,6 +174,7 @@ const DataStore = (() => {
       question_number:String(row.questionNumber ?? ""),
       question:String(row.question ?? ""),
       answer:String(row.answer ?? ""),
+      image_url:String(row.imageUrl ?? ""),
       status:row.status || "unchecked",
       user_answer:String(row.userAnswer ?? "")
     };
@@ -186,6 +188,7 @@ const DataStore = (() => {
     if("questionNumber" in patch) out.question_number=String(patch.questionNumber ?? "");
     if("question" in patch) out.question=String(patch.question ?? "");
     if("answer" in patch) out.answer=String(patch.answer ?? "");
+    if("imageUrl" in patch) out.image_url=String(patch.imageUrl ?? "");
     if("status" in patch) out.status=patch.status;
     if("userAnswer" in patch) out.user_answer=String(patch.userAnswer ?? "");
     return out;
@@ -379,6 +382,36 @@ function toast(message){
 function showError(message){
   console.error(message);
   alert(message);
+}
+  /* =========================================================
+   QUESTION IMAGE UPLOAD
+   ========================================================= */
+async function uploadQuestionImage(file){
+  if(!file || !file.type.startsWith("image/")){
+    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+  }
+
+  const ext=(file.type.split("/")[1] || "png").replace("jpeg","jpg");
+  const fileName=`${currentSession?.user?.id || "user"}/${makeId()}.${ext}`;
+
+  const {error}=await sb.storage
+    .from("question-images")
+    .upload(fileName,file,{
+      cacheControl:"3600",
+      upsert:false
+    });
+
+  if(error) throw error;
+
+  const {data}=sb.storage
+    .from("question-images")
+    .getPublicUrl(fileName);
+
+  if(!data?.publicUrl){
+    throw new Error("이미지 URL을 가져오지 못했습니다.");
+  }
+
+  return data.publicUrl;
 }
 
 /* =========================================================
@@ -673,6 +706,79 @@ function addQuestionBlock(data={}){
   q.value=String(data.question ?? "");
   q.placeholder="문제를 입력하세요.";
   block.appendChild(q);
+    // 문제 이미지 붙여넣기
+  const imageWrap=node("div");
+  imageWrap.style.marginTop="10px";
+
+  const imageHint=node("div",{
+    className:"muted",
+    text:"📷 문제 이미지를 복사한 뒤 문제 입력칸에서 Ctrl+V 하세요."
+  });
+  imageWrap.appendChild(imageHint);
+
+  const imagePreview=node("div");
+  imagePreview.style.marginTop="8px";
+
+  let imageUrl=String(data.imageUrl ?? "");
+  let pendingImageFile=null;
+
+  function renderImagePreview(){
+    imagePreview.replaceChildren();
+
+    if(!imageUrl && !pendingImageFile) return;
+
+    const img=document.createElement("img");
+    img.style.maxWidth="100%";
+    img.style.maxHeight="500px";
+    img.style.borderRadius="10px";
+    img.style.border="1px solid #dce1e8";
+    img.style.display="block";
+    img.style.marginBottom="8px";
+
+    if(pendingImageFile){
+      img.src=URL.createObjectURL(pendingImageFile);
+    }else{
+      img.src=imageUrl;
+    }
+
+    imagePreview.appendChild(img);
+
+    addButton(
+      imagePreview,
+      "이미지 삭제",
+      "btn-danger btn-small",
+      ()=>{
+        pendingImageFile=null;
+        imageUrl="";
+        renderImagePreview();
+      }
+    );
+  }
+
+  q.addEventListener("paste",e=>{
+    const items=[...(e.clipboardData?.items || [])];
+    const imageItem=items.find(item=>item.type.startsWith("image/"));
+
+    if(!imageItem) return;
+
+    const file=imageItem.getAsFile();
+    if(!file) return;
+
+    e.preventDefault();
+    pendingImageFile=file;
+    imageUrl="";
+    renderImagePreview();
+    toast("이미지를 붙여넣었습니다.");
+  });
+
+  block._getImageData=()=>({
+    imageUrl,
+    pendingImageFile
+  });
+
+  imageWrap.appendChild(imagePreview);
+  block.appendChild(imageWrap);
+  renderImagePreview();
 
   addFieldLabel(block,"정답");
   const a=node("textarea");
@@ -685,11 +791,19 @@ function addQuestionBlock(data={}){
 }
 
 function collectEditorRows(){
-  return [...document.querySelectorAll(".question-block")].map((block,index)=>({
-    questionNumber:block.querySelector(".q-number").value.trim() || String(index+1),
-    question:block.querySelector(".q-question").value.trim(),
-    answer:block.querySelector(".q-answer").value.trim()
-  })).filter(row=>row.question || row.answer);
+  return [...document.querySelectorAll(".question-block")].map((block,index)=>{
+    const imageData=block._getImageData
+      ? block._getImageData()
+      : {imageUrl:"",pendingImageFile:null};
+
+    return {
+      questionNumber:block.querySelector(".q-number").value.trim() || String(index+1),
+      question:block.querySelector(".q-question").value.trim(),
+      answer:block.querySelector(".q-answer").value.trim(),
+      imageUrl:imageData.imageUrl,
+      pendingImageFile:imageData.pendingImageFile
+    };
+  }).filter(row=>row.question || row.answer || row.imageUrl || row.pendingImageFile);
 }
 
 async function submitNew(){
@@ -703,12 +817,24 @@ async function submitNew(){
 
   const ok=await askConfirm("문제를 등록하시겠습니까?");
   if(!ok) return;
+  for(const row of rows){
+  if(row.pendingImageFile){
+    try{
+      row.imageUrl=await uploadQuestionImage(row.pendingImageFile);
+    }catch(err){
+      console.error(err);
+      showError("이미지 업로드에 실패했습니다.\n\n"+(err?.message || err));
+      return;
+    }
+  }
+}
 
   await DataStore.addQuestions(rows.map(row=>({
     year,examType,round,
     questionNumber:row.questionNumber,
     question:row.question,
     answer:row.answer,
+    imageUrl:row.imageUrl,
     status:"unchecked",
     userAnswer:""
   })));
@@ -725,14 +851,24 @@ async function submitEdit(id){
 
   const ok=await askConfirm("수정하시겠습니까?");
   if(!ok) return;
-
+  if(rows[0].pendingImageFile){
+  try{
+    rows[0].imageUrl=await uploadQuestionImage(rows[0].pendingImageFile);
+  }catch(err){
+    console.error(err);
+    showError("이미지 업로드에 실패했습니다.\n\n"+(err?.message || err));
+    return;
+  }
+}
+ 
   const updated=await DataStore.updateQuestion(id,{
     year:Number(document.getElementById("editorYear").value),
     examType:document.getElementById("editorType").value,
     round:Number(document.getElementById("editorRound").value),
     questionNumber:rows[0].questionNumber,
     question:rows[0].question,
-    answer:rows[0].answer
+    answer:rows[0].answer,
+    imageUrl:rows[0].imageUrl
   });
   if(!updated){ showError("수정할 문제를 찾지 못했습니다."); return; }
   toast("수정했습니다.");
@@ -801,6 +937,19 @@ async function renderRoundManager(year,examType,round){
     text.style.whiteSpace="pre-wrap";
     text.style.marginTop="10px";
     item.appendChild(text);
+    if(q.imageUrl){
+  const img=document.createElement("img");
+  img.src=q.imageUrl;
+  img.alt="문제 이미지";
+  img.style.maxWidth="100%";
+  img.style.maxHeight="500px";
+  img.style.objectFit="contain";
+  img.style.display="block";
+  img.style.marginTop="10px";
+  img.style.borderRadius="10px";
+  img.style.border="1px solid #dce1e8";
+  item.appendChild(img);
+}
     card.appendChild(item);
   });
 
@@ -945,6 +1094,19 @@ async function renderStudy(){
   card.appendChild(top);
 
   card.appendChild(node("div",{className:"question-text",text:q.question}));
+  if(q.imageUrl){
+  const img=document.createElement("img");
+  img.src=q.imageUrl;
+  img.alt="문제 이미지";
+  img.style.maxWidth="100%";
+  img.style.maxHeight="600px";
+  img.style.objectFit="contain";
+  img.style.display="block";
+  img.style.margin="16px auto";
+  img.style.borderRadius="10px";
+  img.style.border="1px solid #dce1e8";
+  card.appendChild(img);
+}
 
   if(reviewMode && studyIndex===0){
     const bar=node("div",{className:"toolbar"});
