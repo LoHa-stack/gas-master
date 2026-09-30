@@ -153,7 +153,7 @@ const DataStore = (() => {
     return {
       id:String(row.id),
       year:Number(row.year),
-      examType:row.exam_type === "practical" ? "practical" : "written",
+      examType:["written","practical","industrial_written","industrial_practical"].includes(row.exam_type) ? row.exam_type : "written",
       round:Number(row.round),
       questionNumber:String(row.question_number ?? ""),
       question:String(row.question ?? ""),
@@ -360,7 +360,14 @@ function addFieldLabel(parent,text){
   parent.appendChild(node("label",{className:"field-label",text}));
 }
 function clearApp(){ app.replaceChildren(); }
-function typeLabel(code){ return code==="practical" ? "작업형" : "필답형"; }
+function typeLabel(code){
+  return {
+    written:"필답형",
+    practical:"작업형",
+    industrial_written:"산업기사 필답형",
+    industrial_practical:"산업기사 작업형"
+  }[code] || "필답형";
+}
 function statusLabel(code){
   return {
     unchecked:"미체크",
@@ -593,7 +600,7 @@ async function renderHome(){
     const wrap=node("div",{className:"year-block"});
     wrap.appendChild(node("h3",{text:`${year}년`}));
 
-    ["written","practical"].forEach(type=>{
+    ["written","practical","industrial_written","industrial_practical"].forEach(type=>{
       if(!tree[year][type]) return;
       wrap.appendChild(node("div",{className:"type-title",text:typeLabel(type)}));
       const rounds=node("div",{className:"round-list"});
@@ -637,7 +644,12 @@ async function renderEditor(editId=null, preset={}){
   const typeWrap=node("div");
   addFieldLabel(typeWrap,"유형");
   const typeSelect=node("select",{id:"editorType"});
-  [["written","필답형"],["practical","작업형"]].forEach(([value,label])=>{
+  [
+  ["written","필답형"],
+  ["practical","작업형"],
+  ["industrial_written","산업기사 필답형"],
+  ["industrial_practical","산업기사 작업형"]
+].forEach(([value,label])=>{
     const option=node("option",{text:label});
     option.value=value;
     if(value===(existing?.examType ?? preset.examType ?? "written")) option.selected=true;
@@ -982,7 +994,13 @@ async function renderReview(){
   const typeWrap=node("div");
   addFieldLabel(typeWrap,"유형");
   const typeSelect=node("select",{id:"reviewType"});
-  typeSelect.append(new Option("전체",""),new Option("필답형","written"),new Option("작업형","practical"));
+  typeSelect.append(
+  new Option("전체",""),
+  new Option("필답형","written"),
+  new Option("작업형","practical"),
+  new Option("산업기사 필답형","industrial_written"),
+  new Option("산업기사 작업형","industrial_practical")
+);
   typeWrap.appendChild(typeSelect);
 
   const roundWrap=node("div");
