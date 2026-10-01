@@ -1107,7 +1107,23 @@ async function renderStudy(){
   const card=node("section",{className:"card"});
   const top=node("div",{className:"row between"});
   const left=node("div");
-  left.append(node("h2",{text:studyTitle}),node("div",{className:"muted",text:`${studyIndex+1} / ${studyList.length} · ${q.questionNumber}번`}));
+  left.append(node("h2",{text:studyTitle}));
+
+if(reviewMode){
+  left.appendChild(node("div",{
+    className:"muted",
+    text:`${q.year}년 · ${typeLabel(q.examType)} · ${q.round}회 · ${q.questionNumber}번`
+  }));
+  left.appendChild(node("div",{
+    className:"muted",
+    text:`${studyIndex+1} / ${studyList.length}`
+  }));
+}else{
+  left.appendChild(node("div",{
+    className:"muted",
+    text:`${studyIndex+1} / ${studyList.length} · ${q.questionNumber}번`
+  }));
+}
   top.append(left,node("div",{className:"muted",text:`${statusIcon(q.status)} ${statusLabel(q.status)}`}));
   card.appendChild(top);
 
