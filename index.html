@@ -61,6 +61,16 @@ textarea{min-height:120px;resize:vertical;line-height:1.55}
 .review-statuses{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
 .check-pill{display:flex;align-items:center;gap:7px;border:1px solid #d6dce5;background:#fff;border-radius:999px;padding:9px 12px;font-weight:800}
 .check-pill input{width:auto;margin:0}
+.review-choice-group{margin-top:14px}
+.review-choice-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:7px}
+.review-choice-head .field-label{margin:0}
+.review-choices{display:flex;gap:8px;flex-wrap:wrap}
+.review-choice{display:inline-flex;align-items:center;gap:7px;border:1px solid #d6dce5;background:#fff;border-radius:999px;padding:9px 13px;font-weight:800;color:#273043;cursor:pointer}
+.review-choice:has(input:checked){background:#eff6ff;border-color:#93b4ff;color:#1d4ed8}
+.review-choice input{width:auto;margin:0;accent-color:var(--blue)}
+.review-choice-actions{display:flex;gap:6px}
+.review-choice-actions button{border:0;background:transparent;color:var(--blue);font-size:12px;font-weight:800;padding:3px 5px}
+.review-summary{margin-top:14px;color:var(--muted);font-size:13px;line-height:1.6}
 .divider{border:0;border-top:1px solid #e6e9ee;margin:18px 0}
 .empty{padding:26px 0;color:var(--muted)}
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}
@@ -978,40 +988,52 @@ async function renderReview(){
   clearApp();
   const questions=await DataStore.getAllQuestions();
   const years=[...new Set(questions.map(q=>q.year))].sort((a,b)=>b-a);
+  const types=[
+    ["written","필답형"],
+    ["practical","작업형"],
+    ["industrial_written","산업기사 필답형"],
+    ["industrial_practical","산업기사 작업형"]
+  ];
+  const rounds=[1,2,3];
 
   const card=node("section",{className:"card"});
   card.appendChild(node("h2",{text:"복습하기"}));
-  card.appendChild(node("div",{className:"muted",text:"기본값은 미체크/외움/애매/모름 전체 선택입니다."}));
+  card.appendChild(node("div",{className:"muted",text:"연도·유형·회차를 여러 개 선택할 수 있습니다. 기본값은 전체 선택입니다."}));
 
-  const grid=node("div",{className:"grid3"});
-  const yearWrap=node("div");
-  addFieldLabel(yearWrap,"연도");
-  const yearSelect=node("select",{id:"reviewYear"});
-  yearSelect.appendChild(new Option("전체",""));
-  years.forEach(y=>yearSelect.appendChild(new Option(String(y),String(y))));
-  yearWrap.appendChild(yearSelect);
+  function addChoiceGroup(key,title,items,labelOf,valueOf){
+    const group=node("div",{className:"review-choice-group"});
+    const head=node("div",{className:"review-choice-head"});
+    head.appendChild(node("div",{className:"field-label",text:title}));
+    const actions=node("div",{className:"review-choice-actions"});
+    const selectAll=node("button",{text:"전체 선택",type:"button"});
+    const clearAll=node("button",{text:"전체 해제",type:"button"});
+    actions.append(selectAll,clearAll);
+    head.appendChild(actions);
+    group.appendChild(head);
+    const choices=node("div",{className:"review-choices"});
+    items.forEach(item=>{
+      const value=String(valueOf(item));
+      const pill=node("label",{className:"review-choice"});
+      const cb=node("input");
+      cb.type="checkbox";
+      cb.className=`review-filter review-filter-${key}`;
+      cb.value=value;
+      cb.checked=true;
+      pill.append(cb,document.createTextNode(labelOf(item)));
+      choices.appendChild(pill);
+    });
+    selectAll.addEventListener("click",()=>choices.querySelectorAll("input").forEach(cb=>cb.checked=true));
+    clearAll.addEventListener("click",()=>choices.querySelectorAll("input").forEach(cb=>cb.checked=false));
+    group.appendChild(choices);
+    card.appendChild(group);
+  }
 
-  const typeWrap=node("div");
-  addFieldLabel(typeWrap,"유형");
-  const typeSelect=node("select",{id:"reviewType"});
-  typeSelect.append(
-  new Option("전체",""),
-  new Option("필답형","written"),
-  new Option("작업형","practical"),
-  new Option("산업기사 필답형","industrial_written"),
-  new Option("산업기사 작업형","industrial_practical")
-);
-  typeWrap.appendChild(typeSelect);
+  addChoiceGroup("year","연도 선택",years,y=>`${y}년`,y=>y);
+  addChoiceGroup("type","유형 선택",types,t=>t[1],t=>t[0]);
+  addChoiceGroup("round","회차 선택",rounds,r=>`${r}회차`,r=>r);
 
-  const roundWrap=node("div");
-  addFieldLabel(roundWrap,"회차");
-  const roundSelect=node("select",{id:"reviewRound"});
-  roundSelect.append(new Option("전체",""),new Option("1회","1"),new Option("2회","2"),new Option("3회","3"));
-  roundWrap.appendChild(roundSelect);
-
-  grid.append(yearWrap,typeWrap,roundWrap);
-  card.appendChild(grid);
-
+  const divider=node("hr",{className:"divider"});
+  card.appendChild(divider);
   addFieldLabel(card,"상태");
   const statuses=node("div",{className:"review-statuses"});
   [
@@ -1030,6 +1052,7 @@ async function renderReview(){
     statuses.appendChild(pill);
   });
   card.appendChild(statuses);
+  card.appendChild(node("div",{className:"review-summary",text:"선택한 연도·유형·회차와 상태에 해당하는 문제만 복습합니다."}));
 
   const footer=node("div",{className:"toolbar"});
   addButton(footer,"복습 시작","btn-primary",startReview);
@@ -1039,33 +1062,32 @@ async function renderReview(){
 }
 
 async function startReview(){
-  const checked=[...document.querySelectorAll(".review-status:checked")];
-  if(!checked.length){
+  const checkedStatuses=[...document.querySelectorAll(".review-status:checked")];
+  if(!checkedStatuses.length){
     alert("복습할 문제 상태를 하나 이상 선택해주세요.");
     return;
   }
-
-  const yearValue=document.getElementById("reviewYear").value;
-  const typeValue=document.getElementById("reviewType").value;
-  const roundValue=document.getElementById("reviewRound").value;
-  const selectedStatuses=new Set(checked.map(cb=>cb.value));
-
+  const selectedYears=new Set([...document.querySelectorAll(".review-filter-year:checked")].map(cb=>Number(cb.value)));
+  const selectedTypes=new Set([...document.querySelectorAll(".review-filter-type:checked")].map(cb=>cb.value));
+  const selectedRounds=new Set([...document.querySelectorAll(".review-filter-round:checked")].map(cb=>Number(cb.value)));
+  if(!selectedYears.size || !selectedTypes.size || !selectedRounds.size){
+    alert("연도, 유형, 회차를 각각 하나 이상 선택해주세요.");
+    return;
+  }
+  const selectedStatuses=new Set(checkedStatuses.map(cb=>cb.value));
   const all=await DataStore.getAllQuestions();
   const matched=all.filter(q=>
-    (!yearValue || q.year===Number(yearValue)) &&
-    (!typeValue || q.examType===typeValue) &&
-    (!roundValue || q.round===Number(roundValue)) &&
+    selectedYears.has(q.year) &&
+    selectedTypes.has(q.examType) &&
+    selectedRounds.has(q.round) &&
     selectedStatuses.has(q.status)
   );
-
   if(!matched.length){
     alert("조건에 맞는 문제가 없습니다.");
     return;
   }
-
-  const ok=await askConfirm("복습을 시작하시겠습니까?");
+  const ok=await askConfirm(`선택한 조건에 해당하는 ${matched.length}개 문제로 복습을 시작하시겠습니까?`);
   if(!ok) return;
-
   studyList=shuffle(matched);
   studyIndex=0;
   answerVisible=false;
